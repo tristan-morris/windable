@@ -4,11 +4,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Wind Animation Google Maps</title>
 
-    <script src="./../../dist/windable.min.js" defer></script>
-
-    <script src="https://maps.googleapis.com/maps/api/js?v=3.24" defer></script>
+    <script src="./../../dist/windable.js" defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3&key=APIKEY&callback=initialise" defer></script>
     <script src="./examples/googleMaps/canvasLayer.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.min.js" defer></script>
+    <script src="https://d3js.org/d3-dsv.v1.min.js" defer></script>
+    <script src="https://d3js.org/d3-fetch.v1.min.js" defer></script>
 
     <style>
       html, body, #google-map-canvas {
@@ -24,12 +24,12 @@
     <div id="google-map-canvas"></div>
 
     <script type="text/javascript">
-      window.onload = function() {
+      function initMap() {
         // Initialize the map.
         const element = document.getElementById('google-map-canvas');
         const map = new google.maps.Map(element, {
-          zoom: 3,
-          center: new google.maps.LatLng(39.3, -45.8),
+          zoom: 5,
+          center: new google.maps.LatLng(-26.6721608, 134.2239778),
           styles: [
             {featureType: 'water', stylers: [{ color: '#ffffff'}]},
             {featureType: 'poi', stylers: [{visibility: 'off'}]}
@@ -42,8 +42,8 @@
               width: element.clientWidth,
               height: element.clientHeight,
               latlng:[
-                [map.getBounds().j.j, map.getBounds().H.H],
-                [map.getBounds().j.H, map.getBounds().H.j]
+              [map.getBounds().getSouthWest().lng(), map.getBounds().getSouthWest().lat()],
+              [map.getBounds().getNorthEast().lng(), map.getBounds().getNorthEast().lat()]
               ]
             };
           }
@@ -54,10 +54,17 @@
 
         // Fetch data for 700 millibars.
         const mapDataUrl = 'https://raw.githubusercontent.com/dannycochran/windable/master/data/2016040900_700.json'
-        d3.json(mapDataUrl, (err, windData) => {
-          windMap.update({data: windData});
-        });
+          d3.json(mapDataUrl).then(function(jsonData) {
+            windMap.update({data: jsonData}, true);
+          });
       };
+
+      function initialise() {
+        //console.log('received callback from Google maps')
+        window.onload = function() {
+          initMap();
+        };
+      }
     </script>
   </body>
 </html>

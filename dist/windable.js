@@ -1,8 +1,10 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
 
 var _wind = require('./wind/wind');
 
+// @TODO: https://github.com/dannycochran/windable/issues/6
+// Fix this nonsense.
 window.WindMap = _wind.WindMap;
 
 },{"./wind/wind":9}],2:[function(require,module,exports){
@@ -31,7 +33,7 @@ var CanvasRenderer = exports.CanvasRenderer = function (_Renderer) {
   function CanvasRenderer() {
     _classCallCheck(this, CanvasRenderer);
 
-    return _possibleConstructorReturn(this, Object.getPrototypeOf(CanvasRenderer).apply(this, arguments));
+    return _possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).apply(this, arguments));
   }
 
   _createClass(CanvasRenderer, [{
@@ -72,7 +74,7 @@ var CanvasRenderer = exports.CanvasRenderer = function (_Renderer) {
   }, {
     key: 'clear_',
     value: function clear_() {
-      _get(Object.getPrototypeOf(CanvasRenderer.prototype), 'clear_', this).call(this);
+      _get(CanvasRenderer.prototype.__proto__ || Object.getPrototypeOf(CanvasRenderer.prototype), 'clear_', this).call(this);
       if (!this.mapBounds_) return;
 
       this.context.clearRect(0, 0, this.mapBounds_.width, this.mapBounds_.height);
@@ -120,7 +122,7 @@ var WebGLRenderer = exports.WebGLRenderer = function (_Renderer) {
   function WebGLRenderer(canvas, extent, context) {
     _classCallCheck(this, WebGLRenderer);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(WebGLRenderer).call(this, canvas, extent, context));
+    var _this = _possibleConstructorReturn(this, (WebGLRenderer.__proto__ || Object.getPrototypeOf(WebGLRenderer)).call(this, canvas, extent, context));
 
     _this.gl = context;
 
@@ -214,7 +216,7 @@ var WebGLRenderer = exports.WebGLRenderer = function (_Renderer) {
   }, {
     key: 'clear_',
     value: function clear_() {
-      _get(Object.getPrototypeOf(WebGLRenderer.prototype), 'clear_', this).call(this);
+      _get(WebGLRenderer.prototype.__proto__ || Object.getPrototypeOf(WebGLRenderer.prototype), 'clear_', this).call(this);
       this.context.clear(this.context.COLOR_BUFFER_BIT);
       this.context.viewport(0, 0, this.context.drawingBufferWidth, this.context.drawingBufferHeight);
       return this;
@@ -875,8 +877,8 @@ exports.formatTime = formatTime;
  * @return {!Function} A debounced version of the function.
  */
 function debounce(func) {
-  var wait = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
-  var immediate = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+  var wait = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
+  var immediate = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
   var timeout = void 0;
   return function () {
@@ -1126,7 +1128,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.WindMap = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * A light controller class for using a modified version of Esri's Windy.JS.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * A light controller class for using a modified version of Earth.nullschool.
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       */
 
 var _canvas = require('./../renderers/canvas/canvas');
@@ -1144,7 +1146,6 @@ var WindMap = exports.WindMap = function () {
    *
    * @param {!ConfigPayload} config An instance of ConfigPayload.
    */
-
   function WindMap(config) {
     var _this = this;
 
@@ -1202,8 +1203,8 @@ var WindMap = exports.WindMap = function () {
   }, {
     key: 'start',
     value: function start() {
-      var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-      var renderImmediately = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var renderImmediately = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
       if (renderImmediately) this.renderer.start_(config);else this.debounceStart_(config);
 
@@ -1221,8 +1222,8 @@ var WindMap = exports.WindMap = function () {
   }, {
     key: 'update',
     value: function update() {
-      var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-      var renderImmediately = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var renderImmediately = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
       return this.stop().start(config, renderImmediately);
     }

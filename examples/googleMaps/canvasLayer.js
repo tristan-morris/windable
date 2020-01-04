@@ -1,6 +1,4 @@
-
 /**
- * @license
  * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,6 +117,27 @@ function CanvasLayer(opt_options) {
    * @type {!HTMLCanvasElement}
    */
   this.canvas = canvas;
+
+  /**
+   * The CSS width of the canvas, which may be different than the width of the
+   * backing store.
+   * @private {number}
+   */
+  this.canvasCssWidth_ = 300;
+
+  /**
+   * The CSS height of the canvas, which may be different than the height of
+   * the backing store.
+   * @private {number}
+   */
+  this.canvasCssHeight_ = 150;
+
+  /**
+   * A value for scaling the CanvasLayer resolution relative to the CanvasLayer
+   * display size.
+   * @private {number}
+   */
+  this.resolutionScale_ = 1;
 
   /**
    * Simple bind for functions with no args for bind-less browsers (Safari).
@@ -249,6 +268,10 @@ CanvasLayer.prototype.setOptions = function(options) {
     this.setResizeHandler(options.resizeHandler);
   }
 
+  if (options.resolutionScale !== undefined) {
+    this.setResolutionScale(options.resolutionScale);
+  }
+
   if (options.map !== undefined) {
     this.setMap(options.map);
   }
@@ -324,6 +347,20 @@ CanvasLayer.prototype.setResizeHandler = function(opt_resizeHandler) {
 };
 
 /**
+ * Sets a value for scaling the canvas resolution relative to the canvas
+ * display size. This can be used to save computation by scaling the backing
+ * buffer down, or to support high DPI devices by scaling it up (by e.g.
+ * window.devicePixelRatio).
+ * @param {number} scale
+ */
+CanvasLayer.prototype.setResolutionScale = function(scale) {
+  if (typeof scale === 'number') {
+    this.resolutionScale_ = scale;
+    this.resize_();
+  }
+};
+
+/**
  * Set a function that will be called when a repaint of the canvas is required.
  * If opt_updateHandler is null or unspecified, any existing callback is
  * removed.
@@ -388,29 +425,35 @@ CanvasLayer.prototype.onRemove = function() {
  * @private
  */
 CanvasLayer.prototype.resize_ = function() {
-  // TODO(bckenny): it's common to use a smaller canvas but use CSS to scale
-  // what is drawn by the browser to save on fill rate. Add an option to do
-  // this.
-
   if (!this.isAdded_) {
     return;
   }
 
   var map = this.getMap();
-  var width = map.getDiv().offsetWidth;
-  var height = map.getDiv().offsetHeight;
+  var mapWidth = map.getDiv().offsetWidth;
+  var mapHeight = map.getDiv().offsetHeight;
+
+  var newWidth = mapWidth * this.resolutionScale_;
+  var newHeight = mapHeight * this.resolutionScale_;
   var oldWidth = this.canvas.width;
   var oldHeight = this.canvas.height;
 
   // resizing may allocate a new back buffer, so do so conservatively
-  if (oldWidth !== width || oldHeight !== height) {
-    this.canvas.width = width;
-    this.canvas.height = height;
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+  if (oldWidth !== newWidth || oldHeight !== newHeight) {
+    this.canvas.width = newWidth;
+    this.canvas.height = newHeight;
 
     this.needsResize_ = true;
     this.scheduleUpdate();
+  }
+
+  // reset styling if new sizes don't match; resize of data not needed
+  if (this.canvasCssWidth_ !== mapWidth ||
+      this.canvasCssHeight_ !== mapHeight) {
+    this.canvasCssWidth_ = mapWidth;
+    this.canvasCssHeight_ = mapHeight;
+    this.canvas.style.width = mapWidth + 'px';
+    this.canvas.style.height = mapHeight + 'px';
   }
 };
 
@@ -432,16 +475,33 @@ CanvasLayer.prototype.repositionCanvas_ = function() {
   //     this causes noticeable hitches in map and overlay relative
   //     positioning.
 
-  var bounds = this.getMap().getBounds();
-  this.topLeft_ = new google.maps.LatLng(bounds.getNorthEast().lat(),
-      bounds.getSouthWest().lng());
+  var map = this.getMap();
 
-  // canvas position relative to draggable map's conatainer depends on
-  // overlayView's projection, not the map's
+  // topLeft can't be calculated from map.getBounds(), because bounds are
+  // clamped to -180 and 180 when completely zoomed out. Instead, calculate
+  // left as an offset from the center, which is an unwrapped LatLng.
+  var top = map.getBounds().getNorthEast().lat();
+  var center = map.getCenter();
+  var scale = Math.pow(2, map.getZoom());
+  var left = center.lng() - (this.canvasCssWidth_ * 180) / (256 * scale);
+  this.topLeft_ = new google.maps.LatLng(top, left);
+
+  // Canvas position relative to draggable map's container depends on
+  // overlayView's projection, not the map's. Have to use the center of the
+  // map for this, not the top left, for the same reason as above.
   var projection = this.getProjection();
-  var divTopLeft = projection.fromLatLngToDivPixel(this.topLeft_);
+  var halfW = this.canvasCssWidth_ / 2;
+  var halfH = this.canvasCssHeight_ / 2;
+  var divCenter = projection.fromLatLngToDivPixel(
+    projection.fromContainerPixelToLatLng({
+      x: halfW,
+      y: halfH
+    })
+  );
+  var offsetX = -Math.round(halfW - divCenter.x);
+  var offsetY = -Math.round(halfH - divCenter.y);
   this.canvas.style[CanvasLayer.CSS_TRANSFORM_] = 'translate(' +
-      Math.round(divTopLeft.x) + 'px,' + Math.round(divTopLeft.y) + 'px)';
+      offsetX + 'px,' + offsetY + 'px)';
 
   this.scheduleUpdate();
 };

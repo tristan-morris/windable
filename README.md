@@ -1,4 +1,6 @@
-# Windable (v0.0.1)
+# Windable (v1.0.0)
+
+With working Google Maps example as of 04/01/2020.
 
 Windable is a small (6kb gzipped) configurable library for setting up wind visualizations on your maps.
 It can work with any Canvas map layer (Google Maps, Leaflet).
@@ -6,27 +8,22 @@ Windable uses WebGL if possible, and canvas as a default. Windable reuses the re
 
 The source code is annotated (but not compiled) with ClosureJS style comments.
 
-# Examples
-
-Basic Google Maps usage:
-
-https://damp-reaches-87397.herokuapp.com/google_basic
-
-Basic Leaflet usage:
-
-https://damp-reaches-87397.herokuapp.com/leaflet
-
-Configurable Google Maps usage:
-
-https://damp-reaches-87397.herokuapp.com/google_configurable
-
 # Running
+For Google Maps, **set APIKEY** in examples/googleMaps/{configurable.html|basic.html}.
+
+## To run locally
 
 ```
 npm install
 grunt app
 ```
-Will set up a server at localhost:5000.
+Then browse to http://localhost:5000/ or /google_basic, /leaflet.
+
+## To build and run as a container
+```
+docker-compose up --build
+```
+Then browse to http://localhost:5000/ or /google_basic, /leaflet.
 
 # Basic Configuration
 
@@ -50,8 +47,8 @@ const windMap = new WindMap({
       width: element.clientWidth,
       height: element.clientHeight,
       latlng:[
-        [map.getBounds().j.j, map.getBounds().H.H],
-        [map.getBounds().j.H, map.getBounds().H.j]
+        [map.getBounds().getSouthWest().lng(), map.getBounds().getSouthWest().lat()],
+        [map.getBounds().getNorthEast().lng(), map.getBounds().getNorthEast().lat()]
       ]
     };
   }
