@@ -1,0 +1,10 @@
+version: '3.6'
+services:
+  wind:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+    #volumes:
+    #  - ./:/opt/wind
+    ports:
+      - 5000:5000
